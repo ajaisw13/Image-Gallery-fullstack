@@ -39,7 +39,7 @@ useEffect(() => {
 
   return (
     <Container>
-       <ImageList className={classes.imageList} cols={columns}>
+       <ImageList className={classes.imageList} cols={columns} gaps={8} variant='standard' rowHeight={180}>
       {imagesData.map((item) => (
         <ImageListItem key={item.imageUrl} >
           <a className={classes.a_link} href={item.imageUrl} target="_blank" rel="noopener noreferrer">

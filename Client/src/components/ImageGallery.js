@@ -8,6 +8,14 @@ import AddIcon from '@mui/icons-material/Add'
 import Container from '@mui/material/Container';
 import axios from 'axios';
 import imageGalleryStyles from '../styles';
+import SearchIcon from '@mui/icons-material/Search';
+
+import InputAdornment from '@mui/material/InputAdornment';
+
+
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+
 
 function ImageGallery() {
   const [isFilePicker, setIsFilePicker] = useState(false)
@@ -17,11 +25,14 @@ function ImageGallery() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGetImagesError, setIsGetImagesError] = useState(false)
   const [isUploadFailed, setUploadFailed] = useState(false)
+  const [searchText, setSearchText] = useState("");
 
-  const getImages = async () => {
+  const getImages = async (search) => {
       try {
         setIsLoading(true)
-        let res = await axios.get(process.env.REACT_APP_GET_IMAGES)
+        let res = await axios.get(`${process.env.REACT_APP_GET_IMAGES}`, {params: {
+          search: search
+        }})
         setImages(res.data)
         setIsLoading(false)
       } catch (error) {
@@ -30,10 +41,10 @@ function ImageGallery() {
       }
   }
 
-  const uploadImageToDB = async (data) => {
+  const uploadImageToDB = async (data, searchText) => {
     try {
       await axios.post(process.env.REACT_APP_POST_IMAGE_URL, data)
-      getImages()
+      getImages(searchText)
       setUploadedImage("")
       setUploadedImageTitle("")
       setUploadFailed(false)
@@ -43,9 +54,13 @@ function ImageGallery() {
       setUploadedImageTitle("")
     }
 }
-  useEffect(() => {
-    getImages();
-  },[])
+useEffect(() => {
+  const delayDebounce = setTimeout(() => {
+    getImages(searchText); // call your API with search text
+  }, 300); // wait 300ms after user stops typing
+
+  return () => clearTimeout(delayDebounce); // cleanup on next keystroke
+}, [searchText]);
   
   const classNames = imageGalleryStyles()
 
@@ -88,7 +103,7 @@ function ImageGallery() {
       onClick={() => {
         uploadImageToDB({
           imageUrl:uploadedImage,
-          imageText: uploadedImageTitle})
+          imageText: uploadedImageTitle}, searchText)
       }}
       disabled={!uploadedImage || !uploadedImageTitle}
       >Submit</Button>
@@ -119,6 +134,37 @@ function ImageGallery() {
       maxSize: 1024*1024
     }}
   />)}
+<div style={{ position: 'relative', height: '60px' }}>
+  <TextField
+    placeholder="Search images..."
+    value={searchText}
+    onChange={(e) => {
+      e.preventDefault()
+      setSearchText(e.target.value)}}
+    size="small"
+    sx={{
+      position: 'absolute',
+      top: 20,
+      left:-550,
+      right: 0,
+      width: 250
+    }}
+    inputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <SearchIcon />
+        </InputAdornment>
+      ),
+      endAdornment: searchText && (
+        <InputAdornment position="end">
+          <IconButton size="small" onClick={() => setSearchText("")}>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </InputAdornment>
+      )
+    }}
+  />
+</div>
   </Container>
   {isGetImagesError && <Alert severity="error" className={classNames.alert}>Something went wrong while fetching the images!</Alert>}
   {isUploadFailed && <Alert severity="error" className={classNames.alert}>Unable to upload images. Please try again!</Alert>}

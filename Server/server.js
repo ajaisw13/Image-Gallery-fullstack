@@ -1,55 +1,80 @@
 import express from "express";
-import cors from "cors"
-import { dbconnect } from "./DBConnection.js";
+import cors from "cors";
 import dotenv from "dotenv";
+import { dbconnect } from "./DBConnection.js";
 import ImageModel from './models.js';
-import path from 'path'
+import path from 'path';
 
-dotenv.config()
-
-let app = express();
-dbconnect()
-app.use(express.json());
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname + '/public')))
-// right now used in development purpose only as we are utilizing public folder to serve html, JS files
+dotenv.config();
+const app = express();
+// ✅ Set up CORS at the very top (before all routes and middleware)
 app.use(cors({
-  origin: `${process.env.CLIENT_URL}`
-}))
+  origin: 'http://localhost:3000', // OR use process.env.CLIENT_URL
+  methods: ['GET', 'POST'],
+  credentials: false
+}));
 
+
+dbconnect();
+
+
+
+// Required to parse JSON and URL-encoded bodies
+app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.get('/', async(_, res) => {
-  res.send("alive")
-});
-const port = process.env.PORT||5000
+// Serving static files (safe after CORS)
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname + '/public')));
 
-app.get('/images', async(_, res) => {
+// app.use((req, res, next) => {
+//   console.log("here")
+//   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+//   res.header("Access-Control-Allow-Headers", "Content-Type");
+//   next();
+// });
+
+// Test route
+app.get('/', (req, res) => {
+  res.send("alive");
+});
+
+
+
+// API endpoints
+app.get('/images', async (req, res) => {
+  console.log('here')
+  const search = req.query.search || "";
   try {
-    const image = await ImageModel.find({}).sort({_id:-1})
-    res.status(200).json(image)
+    console.log(search)
+    // if(!!search){
+    //   const images = await ImageModel.find({
+    //     imageText: { $regex: search, $options: "i" }
+    //   }).sort({ _id: -1 });
+    // } else {
+      const images = await ImageModel.find({}).sort({ _id: -1 });
+    // }
+ 
+    res.status(200).json(images);
   } catch (err) {
-    res.status(404).json({msg: err})
-    console.error("Unable to retrive images from DB")
+    res.status(500).json({ msg: err.message });
   }
 });
+
 
 app.post('/', async (req, res) => {
   try {
-    const {imageText, imageUrl } = req.body
-    const image = await ImageModel.create({
-      imageText: imageText,
-      imageUrl: imageUrl
-    })
-    res.status(201).json(image)
+    const { imageText, imageUrl } = req.body;
+    const image = await ImageModel.create({ imageText, imageUrl });
+    res.status(201).json(image);
   } catch (err) {
-    res.status(404).json({msg: err})
-    console.error("Unable to post image")
+    res.status(500).json({ msg: err });
   }
-})
+});
 
+// Start server
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
-    console.log(`Server is Up: PORT ${port}`)
-})
-
-export default app;
+  console.log(`Server is Up: PORT ${port}`);
+});

@@ -9,6 +9,7 @@ const imageGalleryStyles = makeStyles({
       objectFit: 'cover',
       width: '100%',
       height: '100%',
+     
     },
     progress:{
         display: "flex",
@@ -17,7 +18,7 @@ const imageGalleryStyles = makeStyles({
     imageGalleryContainer:{
         width: "10%",
         height: "5%",
-        margin: "0 auto",
+        // margin: "0 auto",
         display: "flex !important", 
         flexDirection: "column",
         alignItems: "center",
