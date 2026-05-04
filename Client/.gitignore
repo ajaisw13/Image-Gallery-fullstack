@@ -11,3 +11,5 @@
 # production
 /build
 
+.vercel
+.env*.local

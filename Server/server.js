@@ -7,61 +7,37 @@ import path from 'path';
 
 dotenv.config();
 const app = express();
-// ✅ Set up CORS at the very top (before all routes and middleware)
+
 app.use(cors({
-  origin: 'http://localhost:3000', // OR use process.env.CLIENT_URL
-  methods: ['GET', 'POST'],
+  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  methods: ['GET', 'POST', 'DELETE'],
   credentials: false
 }));
 
-
 dbconnect();
 
-
-
-// Required to parse JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serving static files (safe after CORS)
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname + '/public')));
 
-// app.use((req, res, next) => {
-//   console.log("here")
-//   res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-//   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
-//   res.header("Access-Control-Allow-Headers", "Content-Type");
-//   next();
-// });
-
-// Test route
 app.get('/', (req, res) => {
-  res.send("alive");
+  res.send("OK");
 });
 
-
-
-// API endpoints
 app.get('/images', async (req, res) => {
-  console.log('here')
   const search = req.query.search || "";
   try {
-    console.log(search)
-    // if(!!search){
-    //   const images = await ImageModel.find({
-    //     imageText: { $regex: search, $options: "i" }
-    //   }).sort({ _id: -1 });
-    // } else {
-      const images = await ImageModel.find({}).sort({ _id: -1 });
-    // }
- 
+    const query = search
+      ? { imageText: { $regex: search, $options: "i" } }
+      : {};
+    const images = await ImageModel.find(query).sort({ _id: -1 });
     res.status(200).json(images);
   } catch (err) {
     res.status(500).json({ msg: err.message });
   }
 });
-
 
 app.post('/', async (req, res) => {
   try {
@@ -69,12 +45,26 @@ app.post('/', async (req, res) => {
     const image = await ImageModel.create({ imageText, imageUrl });
     res.status(201).json(image);
   } catch (err) {
-    res.status(500).json({ msg: err });
+    res.status(500).json({ msg: err.message });
   }
 });
 
-// Start server
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-  console.log(`Server is Up: PORT ${port}`);
+app.delete('/images/:id', async (req, res) => {
+  try {
+    const image = await ImageModel.findByIdAndDelete(req.params.id);
+    if (!image) return res.status(404).json({ msg: 'Image not found' });
+    res.status(200).json({ msg: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ msg: err.message });
+  }
 });
+
+// Only bind to a port when running locally — Vercel uses the default export
+if (!process.env.VERCEL) {
+  const port = process.env.PORT || 5000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+export default app;
