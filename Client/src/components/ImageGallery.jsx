@@ -3,6 +3,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Images from './Images';
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Chip,
@@ -12,15 +13,19 @@ import {
   InputAdornment,
   Paper,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
+import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 function ImageGallery() {
+  const { currentUser, logout } = useAuth();
   const fileInputRef = useRef(null);
   const [uploadedImage, setUploadedImage] = useState('');
   const [uploadedImageTitle, setUploadedImageTitle] = useState('');
@@ -122,6 +127,7 @@ function ImageGallery() {
           py: 4,
           textAlign: 'center',
           boxShadow: 3,
+          position: 'relative',
         }}
       >
         <Typography variant="h4" component="h1">
@@ -130,6 +136,24 @@ function ImageGallery() {
         <Typography variant="body1" sx={{ mt: 1, opacity: 0.8 }}>
           Upload, search, and explore your photos
         </Typography>
+
+        {/* User avatar + logout */}
+        <Box sx={{ position: 'absolute', top: '50%', right: 20, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title={currentUser?.displayName || currentUser?.email || ''}>
+            <Avatar
+              src={currentUser?.photoURL || undefined}
+              alt={currentUser?.displayName || currentUser?.email}
+              sx={{ width: 36, height: 36, bgcolor: 'rgba(255,255,255,0.25)', fontSize: '0.9rem' }}
+            >
+              {(currentUser?.displayName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+            </Avatar>
+          </Tooltip>
+          <Tooltip title="Sign out">
+            <IconButton onClick={logout} size="small" sx={{ color: 'rgba(255,255,255,0.85)', '&:hover': { color: 'white' } }}>
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
