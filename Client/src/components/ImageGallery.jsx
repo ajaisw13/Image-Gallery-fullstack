@@ -21,7 +21,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloseIcon from '@mui/icons-material/Close';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SearchIcon from '@mui/icons-material/Search';
-import axios from 'axios';
+import api from '../api';
 import { useAuth } from '../contexts/AuthContext';
 
 function ImageGallery() {
@@ -39,7 +39,7 @@ function ImageGallery() {
   const getImages = async (search) => {
     try {
       setIsLoading(true);
-      const res = await axios.get(import.meta.env.VITE_GET_IMAGES, {
+      const res = await api.get(import.meta.env.VITE_GET_IMAGES, {
         params: { search },
       });
       setImages(res.data);
@@ -84,7 +84,7 @@ function ImageGallery() {
 
   const uploadImageToDB = async (data) => {
     try {
-      await axios.post(import.meta.env.VITE_POST_IMAGE_URL, data);
+      await api.post(import.meta.env.VITE_POST_IMAGE_URL, data);
       setUploadedImage('');
       setUploadedImageTitle('');
       setUploadFailed(false);
@@ -98,7 +98,7 @@ function ImageGallery() {
 
   const deleteImage = async (id) => {
     try {
-      await axios.delete(`${import.meta.env.VITE_POST_IMAGE_URL}/images/${id}`);
+      await api.delete(`${import.meta.env.VITE_POST_IMAGE_URL}/images/${id}`);
       setImages((prev) => prev.filter((img) => img._id !== id));
     } catch {
       // silently ignore — image stays in the list if delete fails
